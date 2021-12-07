@@ -16,9 +16,20 @@ class AddressParse(APIView):
     def get(self, request):
         # TODO: Flesh out this method to parse an address string using the
         # parse() method and return the parsed components to the frontend.
-        return Response({})
+        address_components, address_type = self.parse(request.query_params['request'])
+        return Response({'input_string': request.query_params['request'], 'address_components': address_components, 'address_type': address_type})
 
     def parse(self, address):
         # TODO: Implement this method to return the parsed components of a
         # given address using usaddress: https://github.com/datamade/usaddress
-        return address_components, address_type
+        try:
+            parsed = usaddress.tag(address)
+            address_components = parsed[0]
+            address_type = parsed[1]
+            return address_components, address_type
+        except usaddress.RepeatedLabelError:
+            raise ParseError("Repeated Label Error", 400)
+            # return "ERROR", "Repeated Label Error"
+        except:
+            raise ParseError("Unknown Error", 400)
+            # return "ERROR", "Unknown"
